@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check-format:
+    name: Check format
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run format check
+        run: make check-format
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run linter
+        run: make lint
+
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run unit tests
+        run: make test
+
+  build:
+    name: Build & upload engine.wasm
+    runs-on: ubuntu-latest
+    needs: [check-format, lint, test]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build project
+        run: make
+
+      - name: Upload engine.wasm artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: engine-wasm
+          path: build/engine.wasm
+
