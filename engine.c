@@ -101,7 +101,7 @@ static void try_move(
         }
         break;
     case ACTION_MOVE_RIGHT:
-        if (pos + 1U < n_cols)
+        if ((pos % n_cols) + 1U < n_cols)
         {
             pos += 1U;
         }
@@ -113,7 +113,7 @@ static void try_move(
         }
         break;
     case ACTION_MOVE_LEFT:
-        if (pos > 0)
+        if ((pos % n_cols) > 0)
         {
             pos -= 1U;
         }
