@@ -43,37 +43,44 @@ void tearDown(void)
     return world;
 }
 
-void test_load_world(void)
+void test_load_world_with_zero_seed(void)
 {
     uint32_t *world_state = create_world();
     TEST_ASSERT_NOT_NULL(world_state);
 
-    {
-        const uint32_t seed = 0U;
-        const struct World world = load_world(world_state, seed);
-        TEST_ASSERT_TRUE(world.rng_state > 0U);
-    }
+    const uint32_t seed = 0U;
+    const struct World world = load_world(world_state, seed);
 
-    {
-        const uint32_t seed = 42U;
-        const struct World world = load_world(world_state, seed);
+    TEST_ASSERT_NOT_EQUAL(0U, world.rng_state);
 
-        TEST_ASSERT_EQUAL_UINT32(seed, world.rng_state);
+    free(world_state);
+}
 
-        const struct Agents agents = world.agents;
-        TEST_ASSERT_EQUAL_UINT32(28U, agents.positions[0]);
-        TEST_ASSERT_EQUAL_UINT32(32U, agents.positions[1]);
-        TEST_ASSERT_EQUAL_UINT32(ORIENTATION_RIGHT, agents.orientations[0]);
-        TEST_ASSERT_EQUAL_UINT32(ORIENTATION_UP, agents.orientations[1]);
+void test_load_world_initializes_world(void)
+{
+    uint32_t *world_state = create_world();
+    TEST_ASSERT_NOT_NULL(world_state);
 
-        const struct Map map = world.map;
-        TEST_ASSERT_EQUAL_UINT32(5, map.n_rows);
-        TEST_ASSERT_EQUAL_UINT32(12, map.n_cols);
-        TEST_ASSERT_EQUAL_UINT8(TILE_WALL, map.tiles[0]);
-        TEST_ASSERT_EQUAL_UINT8(TILE_WALL, map.tiles[59]);
-        TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, map.tiles[28]);
-        TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, map.tiles[32]);
-    }
+    const uint32_t seed = 42U;
+    const struct World world = load_world(world_state, seed);
+
+    TEST_ASSERT_EQUAL_UINT32(seed, world.rng_state);
+
+    const struct Agents agents = world.agents;
+    TEST_ASSERT_EQUAL_UINT32(2U, agents.n_agents);
+    TEST_ASSERT_EQUAL_UINT32(28U, agents.positions[0]);
+    TEST_ASSERT_EQUAL_UINT32(32U, agents.positions[1]);
+    TEST_ASSERT_EQUAL_UINT32(ORIENTATION_RIGHT, agents.orientations[0]);
+    TEST_ASSERT_EQUAL_UINT32(ORIENTATION_UP, agents.orientations[1]);
+
+    const struct Map map = world.map;
+    TEST_ASSERT_EQUAL_UINT32(5U, map.n_rows);
+    TEST_ASSERT_EQUAL_UINT32(12U, map.n_cols);
+
+    TEST_ASSERT_EQUAL_UINT8(TILE_WALL, map.tiles[0]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_WALL, map.tiles[59]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, map.tiles[28]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, map.tiles[32]);
 
     free(world_state);
 }
@@ -175,7 +182,9 @@ int main(void)
 {
     UNITY_BEGIN();
 
-    RUN_TEST(test_load_world);
+    RUN_TEST(test_load_world_with_zero_seed);
+    RUN_TEST(test_load_world_initializes_world);
+
     RUN_TEST(test_try_move_moves_agent_into_free_tile);
     RUN_TEST(test_try_move_does_not_move_into_wall);
     RUN_TEST(test_try_move_leaving_open_door_keeps_door_open);
