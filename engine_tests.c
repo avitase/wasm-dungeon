@@ -98,7 +98,7 @@ void test_try_move_moves_agent_into_free_tile(void)
     TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, map.tiles[28]);
     TEST_ASSERT_EQUAL_UINT8(TILE_FREE, map.tiles[29]);
 
-    try_move(&world, ACTION_MOVE_RIGHT, 0U);
+    try_move(&world, ACTION_MOVE_RIGHT, world.agents.positions + 0U);
 
     TEST_ASSERT_EQUAL_UINT32(29U, world.agents.positions[0]);
     TEST_ASSERT_EQUAL_UINT8(TILE_FREE, map.tiles[28]);
@@ -124,7 +124,7 @@ void test_try_move_does_not_move_into_wall(void)
 
     TEST_ASSERT_EQUAL_UINT8(TILE_WALL, map.tiles[1]);
 
-    try_move(&world, ACTION_MOVE_UP, 0U);
+    try_move(&world, ACTION_MOVE_UP, world.agents.positions + 0U);
 
     TEST_ASSERT_EQUAL_UINT32(13U, world.agents.positions[0]);
     TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, map.tiles[13]);
@@ -147,7 +147,7 @@ void test_try_move_leaving_open_door_keeps_door_open(void)
 
     TEST_ASSERT_EQUAL_UINT8(TILE_FREE, map.tiles[31]);
 
-    try_move(&world, ACTION_MOVE_RIGHT, 0U);
+    try_move(&world, ACTION_MOVE_RIGHT, world.agents.positions + 0U);
 
     TEST_ASSERT_EQUAL_UINT32(31U, world.agents.positions[0]);
     TEST_ASSERT_EQUAL_UINT8(TILE_OPEN_DOOR_FREE, map.tiles[30]);
@@ -169,7 +169,7 @@ void test_try_move_into_open_door_marks_it_occupied(void)
     map.tiles[29] = TILE_OCCUPIED;
     map.tiles[30] = TILE_OPEN_DOOR_FREE;
 
-    try_move(&world, ACTION_MOVE_RIGHT, 0U);
+    try_move(&world, ACTION_MOVE_RIGHT, world.agents.positions + 0U);
 
     TEST_ASSERT_EQUAL_UINT32(30U, world.agents.positions[0]);
     TEST_ASSERT_EQUAL_UINT8(TILE_FREE, map.tiles[29]);

@@ -80,14 +80,10 @@ static struct World load_world(uint32_t *world_state, const uint32_t seed)
     return world;
 }
 
-static void try_move(
-    struct World *world,
-    const enum Action action, // NOLINT(bugprone-easily-swappable-parameters)
-    const uint32_t idx        // NOLINT(bugprone-easily-swappable-parameters)
-)
+static void
+try_move(struct World *world, const enum Action action, uint32_t *pos)
 {
-    uint32_t pos = world->agents.positions[idx];
-    const uint32_t old_pos = pos;
+    const uint32_t old_pos = *pos;
 
     const uint32_t n_rows = world->map.n_rows;
     const uint32_t n_cols = world->map.n_cols;
@@ -95,66 +91,62 @@ static void try_move(
     switch (action)
     {
     case ACTION_MOVE_UP:
-        if (pos >= n_cols)
+        if (*pos >= n_cols)
         {
-            pos -= n_cols;
+            *pos -= n_cols;
         }
         break;
     case ACTION_MOVE_RIGHT:
-        if ((pos % n_cols) + 1U < n_cols)
+        if ((*pos % n_cols) + 1U < n_cols)
         {
-            pos += 1U;
+            *pos += 1U;
         }
         break;
     case ACTION_MOVE_DOWN:
-        if (pos + n_cols < n_rows * n_cols)
+        if (*pos + n_cols < n_rows * n_cols)
         {
-            pos += n_cols;
+            *pos += n_cols;
         }
         break;
     case ACTION_MOVE_LEFT:
-        if ((pos % n_cols) > 0)
+        if ((*pos % n_cols) > 0)
         {
-            pos -= 1U;
+            *pos -= 1U;
         }
         break;
     default:
-        // do nothing
+        return;
     }
 
-    enum Tile *tile = world->map.tiles + pos;
-    if (pos != old_pos && (*tile == TILE_FREE || *tile == TILE_OPEN_DOOR_FREE))
+    enum Tile *tile = world->map.tiles + *pos;
+    if (*tile != TILE_FREE && *tile != TILE_OPEN_DOOR_FREE)
     {
-        enum Tile *old_tile = world->map.tiles + old_pos;
-        switch (*old_tile)
-        {
-        case TILE_OPEN_DOOR_OCCUPIED:
-            *old_tile = TILE_OPEN_DOOR_FREE;
-            break;
-        default:
-            *old_tile = TILE_FREE;
-        }
+        *pos = old_pos;
+        return;
+    }
 
-        switch (*tile)
-        {
-        case TILE_OPEN_DOOR_FREE:
-            *tile = TILE_OPEN_DOOR_OCCUPIED;
-            break;
-        default:
-            *tile = TILE_OCCUPIED;
-        }
+    enum Tile *old_tile = world->map.tiles + old_pos;
+    switch (*old_tile)
+    {
+    case TILE_OPEN_DOOR_OCCUPIED:
+        *old_tile = TILE_OPEN_DOOR_FREE;
+        break;
+    default:
+        *old_tile = TILE_FREE;
+    }
 
-        world->agents.positions[idx] = pos;
+    switch (*tile)
+    {
+    case TILE_OPEN_DOOR_FREE:
+        *tile = TILE_OPEN_DOOR_OCCUPIED;
+        break;
+    default:
+        *tile = TILE_OCCUPIED;
     }
 }
 
-static void
-turn(struct World *world,
-     const enum Action action, // NOLINT(bugprone-easily-swappable-parameters)
-     const uint32_t idx        // NOLINT(bugprone-easily-swappable-parameters)
-)
+static void turn(const enum Action action, uint32_t *orientation)
 {
-    uint32_t *orientation = world->agents.orientations + idx;
     switch (action)
     {
     case ACTION_TURN_90:
@@ -185,12 +177,12 @@ static void try_realize_action(struct World *world,
     case ACTION_MOVE_RIGHT:
     case ACTION_MOVE_DOWN:
     case ACTION_MOVE_LEFT:
-        try_move(world, action, idx);
+        try_move(world, action, world->agents.positions + idx);
         break;
     case ACTION_TURN_90:
     case ACTION_TURN_180:
     case ACTION_TURN_270:
-        turn(world, action, idx);
+        turn(action, world->agents.orientations + idx);
         break;
     }
 }
