@@ -61,7 +61,9 @@ jobs:
           echo "LLVM_COV=$LLVM_COV" >> "$GITHUB_ENV"
 
       - name: Generate coverage report
-        run: make coverage
+        run: |
+          make coverage
+          cat build/coverage.txt
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
