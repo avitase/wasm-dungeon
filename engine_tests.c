@@ -83,97 +83,139 @@ void test_load_world_initializes_world(void)
     TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[32]);
 }
 
-void test_try_move_moves_agent_into_free_tile(void)
+void test_try_move_moves_agent_up_into_free_tile(void)
 {
-    /* Move agent 1 into a free tile and ensure agent 0 is unaffected. */
-    TEST_ASSERT_EQUAL_UINT32(2U, g_agents.n_agents);
+    try_move(&g_world, ACTION_MOVE_UP, g_agents.positions + 1U);
 
-    /* Place agent 0 at 28 and agent 1 at 29, with 30 free. */
-    g_agents.positions[0] = 28U;
-    g_agents.positions[1] = 29U;
-    g_map.tiles[28] = TILE_OCCUPIED;
-    g_map.tiles[29] = TILE_OCCUPIED;
-    g_map.tiles[30] = TILE_FREE;
+    // agent 1 moved into the free tile
+    TEST_ASSERT_EQUAL_UINT32(20U, g_agents.positions[1]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_FREE, g_map.tiles[32]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[20]);
 
+    // agent 0 is unaffected
+    TEST_ASSERT_EQUAL_UINT32(28U, g_agents.positions[0]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[28]);
+}
+
+void test_try_move_moves_agent_right_into_free_tile(void)
+{
     try_move(&g_world, ACTION_MOVE_RIGHT, g_agents.positions + 1U);
 
-    /* Agent 1 moved into the free tile. */
-    TEST_ASSERT_EQUAL_UINT32(30U, g_agents.positions[1]);
-    TEST_ASSERT_EQUAL_UINT8(TILE_FREE, g_map.tiles[29]);
-    TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[30]);
+    // agent 1 moved into the free tile
+    TEST_ASSERT_EQUAL_UINT32(33U, g_agents.positions[1]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_FREE, g_map.tiles[32]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[33]);
 
-    /* Agent 0 is unaffected. */
+    // agent 0 is unaffected
+    TEST_ASSERT_EQUAL_UINT32(28U, g_agents.positions[0]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[28]);
+}
+
+void test_try_move_moves_agent_down_into_free_tile(void)
+{
+    try_move(&g_world, ACTION_MOVE_DOWN, g_agents.positions + 1U);
+
+    // agent 1 moved into the free tile
+    TEST_ASSERT_EQUAL_UINT32(44U, g_agents.positions[1]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_FREE, g_map.tiles[32]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[44]);
+
+    // agent 0 is unaffected
+    TEST_ASSERT_EQUAL_UINT32(28U, g_agents.positions[0]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[28]);
+}
+
+void test_try_move_moves_agent_left_into_free_tile(void)
+{
+    try_move(&g_world, ACTION_MOVE_LEFT, g_agents.positions + 1U);
+
+    // agent 1 moved into the free tile
+    TEST_ASSERT_EQUAL_UINT32(31U, g_agents.positions[1]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_FREE, g_map.tiles[32]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[31]);
+
+    // agent 0 is unaffected
     TEST_ASSERT_EQUAL_UINT32(28U, g_agents.positions[0]);
     TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[28]);
 }
 
 void test_try_move_does_not_move_into_wall(void)
 {
-    /* Place agent 0 on its default tile and agent 1 below a wall. */
-    g_agents.positions[0] = 28U;
-    g_agents.positions[1] = 13U;
-    g_map.tiles[28] = TILE_OCCUPIED;
-    g_map.tiles[13] = TILE_OCCUPIED;
+    g_map.tiles[33] = TILE_WALL;
 
-    TEST_ASSERT_EQUAL_UINT8(TILE_WALL, g_map.tiles[1]);
+    try_move(&g_world, ACTION_MOVE_RIGHT, g_agents.positions + 1U);
 
-    try_move(&g_world, ACTION_MOVE_UP, g_agents.positions + 1U);
+    // agent 1 must not move into the wall
+    TEST_ASSERT_EQUAL_UINT32(32U, g_agents.positions[1]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[32]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_WALL, g_map.tiles[33]);
 
-    /* Agent 1 must not move into the wall. */
-    TEST_ASSERT_EQUAL_UINT32(13U, g_agents.positions[1]);
-    TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[13]);
-    TEST_ASSERT_EQUAL_UINT8(TILE_WALL, g_map.tiles[1]);
+    // agent 0 is unaffected
+    TEST_ASSERT_EQUAL_UINT32(28U, g_agents.positions[0]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[28]);
+}
 
-    /* Agent 0 is unaffected. */
+void test_try_move_does_not_move_into_closed_door(void)
+{
+    g_map.tiles[33] = TILE_CLOSED_DOOR;
+
+    try_move(&g_world, ACTION_MOVE_RIGHT, g_agents.positions + 1U);
+
+    // agent 1 must not move into the closed door
+    TEST_ASSERT_EQUAL_UINT32(32U, g_agents.positions[1]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[32]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_CLOSED_DOOR, g_map.tiles[33]);
+
+    // agent 0 is unaffected
+    TEST_ASSERT_EQUAL_UINT32(28U, g_agents.positions[0]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[28]);
+}
+
+void test_try_move_does_not_move_into_occupied_tile(void)
+{
+    g_agents.positions[1] = 29U;
+    g_map.tiles[29] = TILE_OCCUPIED;
+    g_map.tiles[32] = TILE_FREE;
+
+    try_move(&g_world, ACTION_MOVE_LEFT, g_agents.positions + 1U);
+
+    // agent 1 must not move into occupied tile (agent 0)
+    TEST_ASSERT_EQUAL_UINT32(29U, g_agents.positions[1]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[29]);
+
+    // agent 0 is unaffected
     TEST_ASSERT_EQUAL_UINT32(28U, g_agents.positions[0]);
     TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[28]);
 }
 
 void test_try_move_leaving_open_door_keeps_door_open(void)
 {
-    /* Agent 0 stays on its tile; agent 1 starts on an open door at 30. */
-    g_agents.positions[0] = 28U;
-    g_agents.positions[1] = 30U;
-
-    g_map.tiles[28] = TILE_OCCUPIED;
-    g_map.tiles[32] = TILE_FREE; /* clear old agent-1 tile */
-    g_map.tiles[30] = TILE_OPEN_DOOR_OCCUPIED;
-
-    TEST_ASSERT_EQUAL_UINT8(TILE_FREE, g_map.tiles[31]);
+    g_map.tiles[32] = TILE_OPEN_DOOR_OCCUPIED;
 
     try_move(&g_world, ACTION_MOVE_RIGHT, g_agents.positions + 1U);
 
-    /* Agent 1 moved off the door to the right. */
-    TEST_ASSERT_EQUAL_UINT32(31U, g_agents.positions[1]);
-    /* Old door stays open but becomes unoccupied. */
-    TEST_ASSERT_EQUAL_UINT8(TILE_OPEN_DOOR_FREE, g_map.tiles[30]);
-    /* New tile becomes normally occupied. */
-    TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[31]);
+    // agent 1 moved off the door to the right
+    TEST_ASSERT_EQUAL_UINT32(33U, g_agents.positions[1]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_OPEN_DOOR_FREE, g_map.tiles[32]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[33]);
 
-    /* Agent 0 is unaffected. */
+    // agent 0 is unaffected
     TEST_ASSERT_EQUAL_UINT32(28U, g_agents.positions[0]);
     TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[28]);
 }
 
 void test_try_move_into_open_door_marks_it_occupied(void)
 {
-    /* Agent 0 stays on its tile; agent 1 moves into an open door. */
-    g_agents.positions[0] = 28U;
-    g_agents.positions[1] = 29U;
-
-    g_map.tiles[28] = TILE_OCCUPIED;
-    g_map.tiles[32] = TILE_FREE; /* clear old agent-1 tile */
-    g_map.tiles[29] = TILE_OCCUPIED;
-    g_map.tiles[30] = TILE_OPEN_DOOR_FREE;
+    g_map.tiles[33] = TILE_OPEN_DOOR_FREE;
 
     try_move(&g_world, ACTION_MOVE_RIGHT, g_agents.positions + 1U);
 
-    /* Agent 1 should have moved onto the door tile. */
-    TEST_ASSERT_EQUAL_UINT32(30U, g_agents.positions[1]);
-    TEST_ASSERT_EQUAL_UINT8(TILE_FREE, g_map.tiles[29]);
-    TEST_ASSERT_EQUAL_UINT8(TILE_OPEN_DOOR_OCCUPIED, g_map.tiles[30]);
+    // agent 1 should have moved onto the door tile
+    TEST_ASSERT_EQUAL_UINT32(33U, g_agents.positions[1]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_FREE, g_map.tiles[32]);
+    TEST_ASSERT_EQUAL_UINT8(TILE_OPEN_DOOR_OCCUPIED, g_map.tiles[33]);
 
-    /* Agent 0 is unaffected. */
+    // agent 0 is unaffected
     TEST_ASSERT_EQUAL_UINT32(28U, g_agents.positions[0]);
     TEST_ASSERT_EQUAL_UINT8(TILE_OCCUPIED, g_map.tiles[28]);
 }
@@ -185,8 +227,13 @@ int main(void)
     RUN_TEST(test_load_world_with_zero_seed);
     RUN_TEST(test_load_world_initializes_world);
 
-    RUN_TEST(test_try_move_moves_agent_into_free_tile);
+    RUN_TEST(test_try_move_moves_agent_up_into_free_tile);
+    RUN_TEST(test_try_move_moves_agent_right_into_free_tile);
+    RUN_TEST(test_try_move_moves_agent_left_into_free_tile);
+    RUN_TEST(test_try_move_moves_agent_down_into_free_tile);
     RUN_TEST(test_try_move_does_not_move_into_wall);
+    RUN_TEST(test_try_move_does_not_move_into_closed_door);
+    RUN_TEST(test_try_move_does_not_move_into_occupied_tile);
     RUN_TEST(test_try_move_leaving_open_door_keeps_door_open);
     RUN_TEST(test_try_move_into_open_door_marks_it_occupied);
 
