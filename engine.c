@@ -23,13 +23,13 @@ enum Action : uint32_t
 
 enum Tile : uint8_t
 {
-    TILE_HIDDEN,
-    TILE_FREE,
-    TILE_OCCUPIED,
-    TILE_WALL,
-    TILE_OPEN_DOOR_FREE,
-    TILE_OPEN_DOOR_OCCUPIED,
-    TILE_CLOSED_DOOR
+    TILE_HIDDEN = 0x00,
+    TILE_WALL = 0x11,
+    TILE_FLOOR = 0x02,
+    TILE_FLOOR_OCCUPIED = 0x12,
+    TILE_OPEN_DOOR = 0x03,
+    TILE_OPEN_DOOR_OCCUPIED = 0x13,
+    TILE_CLOSED_DOOR = 0x33,
 };
 
 enum Orientation : uint32_t
@@ -60,6 +60,24 @@ struct World
     struct Agents agents;
     struct Map map;
 };
+
+[[nodiscard]] static uint32_t is_tile_blocked(const enum Tile tile)
+{
+    // NOLINTNEXTLINE(readability-magic-numbers)
+    return (tile & 0x10) == 0x10;
+}
+
+[[nodiscard]] static enum Tile block_tile(const enum Tile tile)
+{
+    // NOLINTNEXTLINE(readability-magic-numbers)
+    return tile | 0x10;
+}
+
+[[nodiscard]] static enum Tile unblock_tile(const enum Tile tile)
+{
+    // NOLINTNEXTLINE(readability-magic-numbers)
+    return tile & ~0x10;
+}
 
 static struct World load_world(uint32_t *world_state, const uint32_t seed)
 {
@@ -119,30 +137,16 @@ try_move(struct World *world, const enum Action action, uint32_t *pos)
     }
 
     enum Tile *tile = world->map.tiles + *pos;
-    if (*tile != TILE_FREE && *tile != TILE_OPEN_DOOR_FREE)
+    if (is_tile_blocked(*tile))
     {
         *pos = old_pos;
         return;
     }
 
-    enum Tile *old_tile = world->map.tiles + old_pos;
-    switch (*old_tile)
-    {
-    case TILE_OPEN_DOOR_OCCUPIED:
-        *old_tile = TILE_OPEN_DOOR_FREE;
-        break;
-    default:
-        *old_tile = TILE_FREE;
-    }
+    *tile = block_tile(*tile);
 
-    switch (*tile)
-    {
-    case TILE_OPEN_DOOR_FREE:
-        *tile = TILE_OPEN_DOOR_OCCUPIED;
-        break;
-    default:
-        *tile = TILE_OCCUPIED;
-    }
+    enum Tile *old_tile = world->map.tiles + old_pos;
+    *old_tile = unblock_tile(*old_tile);
 }
 
 static void turn(const enum Action action, uint32_t *orientation)
@@ -198,7 +202,7 @@ static void apply_occlusion(enum Tile *tiles)
     uint32_t m[n_tiles]; // NOLINT(readability-identifier-length)
     for (uint32_t i = 0; i < n_tiles; i++)
     {
-        m[i] = (tiles[i] != TILE_FREE) && (tiles[i] != TILE_OPEN_DOOR_FREE);
+        m[i] = is_tile_blocked(tiles[i]);
     }
 
     // NOLINTBEGIN(readability-magic-numbers)
