@@ -100,7 +100,7 @@ static struct World load_world(uint32_t *world_state, const uint32_t seed)
 }
 
 static void
-try_move(struct World *world, const enum Action action, uint32_t *pos)
+try_move(const struct World *world, const enum Action action, uint32_t *pos)
 {
     const uint32_t old_pos = *pos;
 
@@ -170,7 +170,7 @@ static void turn(const enum Action action, enum Orientation *orientation)
     *orientation %= 4U;
 }
 
-static void try_realize_action(struct World *world,
+static void try_realize_action(const struct World *world,
                                const enum Action action,
                                const uint32_t idx)
 {
