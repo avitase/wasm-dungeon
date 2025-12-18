@@ -324,7 +324,7 @@ static void update_agent_state(const struct World *world,
         RNG_LCG_INC = 1013904223U
     };
 
-    *rng_state = *rng_state * RNG_LCG_MUL + RNG_LCG_INC;
+    *rng_state = (*rng_state * RNG_LCG_MUL) + RNG_LCG_INC;
     return *rng_state;
 }
 
