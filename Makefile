@@ -60,8 +60,11 @@ check-format:
 	$(CLANG_FORMAT) -Wno-error=unknown --dry-run --Werror engine.c
 	$(CLANG_FORMAT) -Wno-error=unknown --dry-run --Werror engine_tests.c
 
-lint: engine.c
+build/lint.stamp: engine.c | build
 	$(CLANG_TIDY) engine.c -- -std=c23 -nostdlib $(WARNINGS) -O0
+	touch $@
+
+lint: build/lint.stamp
 
 test: check-format lint build/engine.wasm build/unit_tests
 	./build/unit_tests

@@ -322,6 +322,104 @@ void test_turn_agent_by_270_degrees_clockwise(void)
     TEST_ASSERT_EQUAL_UINT32(ORIENTATION_UP, orientation);
 }
 
+void test_fill_agent_fov(void)
+{
+    const enum Tile o = TILE_FLOOR;
+    const enum Tile x = TILE_FLOOR_OCCUPIED;
+    const enum Tile w = TILE_WALL;
+    const enum Tile d = TILE_OPEN_DOOR;
+    const enum Tile h = TILE_HIDDEN;
+
+    // clang-format off
+    enum Tile map[] = {
+        x, o, o, o, o, w, o,
+        o, x, o, o, o, w, o,
+        o, o, o, o, o, w, o,
+        w, d, w, w, w, w, o,
+        o, o, w, o, o, o, o,
+        o, o, w, o, o, o, o,
+    };
+    // clang-format on
+
+    TEST_ASSERT_EQUAL_UINT32(6U, g_map.n_rows);
+    TEST_ASSERT_EQUAL_UINT32(7U, g_map.n_cols);
+    memcpy(g_map.tiles, map, sizeof(map));
+
+    move_agent0(0);
+    move_agent1(8);
+
+    TEST_ASSERT_EQUAL_UINT32(FOV_SIZE, 5U);
+    enum Tile tiles[25];
+
+    {
+        g_agents.orientations[1] = ORIENTATION_UP;
+        fill_agent_fov(&g_world, 1U, tiles);
+
+        // clang-format off
+        enum Tile expected[] = {
+            h, h, h, h, h,
+            h, h, h, h, h,
+            h, h, h, h, h,
+            h, x, o, o, o,
+            h, o, x, o, o,
+        };
+        // clang-format on
+
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, tiles, 25);
+    }
+
+    {
+        g_agents.orientations[1] = ORIENTATION_RIGHT;
+        fill_agent_fov(&g_world, 1U, tiles);
+
+        // clang-format off
+        enum Tile expected[] = {
+            h, w, w, w, w,
+            h, o, o, o, w,
+            h, o, o, o, w,
+            h, o, o, o, w,
+            h, o, x, o, d,
+        };
+        // clang-format on
+
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, tiles, 25);
+    }
+
+    {
+        g_agents.orientations[1] = ORIENTATION_DOWN;
+        fill_agent_fov(&g_world, 1U, tiles);
+
+        // clang-format off
+        enum Tile expected[] = {
+            o, w, o, o, h,
+            o, w, o, o, h,
+            w, w, d, w, h,
+            o, o, o, o, h,
+            o, o, x, o, h,
+        };
+        // clang-format on
+
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, tiles, 25);
+    }
+
+    {
+        g_agents.orientations[1] = ORIENTATION_LEFT;
+        fill_agent_fov(&g_world, 1U, tiles);
+
+        // clang-format off
+        enum Tile expected[] = {
+            h, h, h, h, h,
+            h, h, h, h, h,
+            h, h, h, h, h,
+            w, o, o, x, h,
+            d, o, x, o, h,
+        };
+        // clang-format on
+
+        TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, tiles, 25);
+    }
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -342,6 +440,8 @@ int main(void)
     RUN_TEST(test_turn_agent_by_90_degrees_clockwise);
     RUN_TEST(test_turn_agent_by_180_degrees_clockwise);
     RUN_TEST(test_turn_agent_by_270_degrees_clockwise);
+
+    RUN_TEST(test_fill_agent_fov);
 
     return UNITY_END();
 }

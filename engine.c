@@ -191,37 +191,45 @@ static void try_realize_action(const struct World *world,
 static void
 fill_agent_fov(const struct World *world, const uint32_t idx, enum Tile *tiles)
 {
+    static_assert(FOV_SIZE % 2 == 1);
+
     const uint32_t n_rows = world->map.n_rows;
     const uint32_t n_cols = world->map.n_cols;
 
     const uint32_t pos = world->agents.positions[idx];
-    const uint32_t row_offset = (pos / n_cols) - FOV_SIZE + 1U;
-    const uint32_t col_offset = (pos % n_cols) - FOV_SIZE + 1U;
 
     uint32_t a; // NOLINT(readability-identifier-length)
     uint32_t b; // NOLINT(readability-identifier-length)
     uint32_t c; // NOLINT(readability-identifier-length)
+    uint32_t row_offset = pos / n_cols;
+    uint32_t col_offset = pos % n_cols;
     switch (world->agents.orientations[idx])
     {
     case ORIENTATION_UP:
         a = FOV_SIZE;
         b = 1U;
         c = 0U;
+        row_offset -= FOV_SIZE - 1U;
+        col_offset -= (FOV_SIZE / 2U);
         break;
     case ORIENTATION_RIGHT:
-        a = -1U;
-        b = FOV_SIZE;
-        c = FOV_SIZE - 1U;
+        a = 1U;
+        b = -FOV_SIZE;
+        c = FOV_SIZE * (FOV_SIZE - 1U);
+        row_offset -= (FOV_SIZE / 2U);
         break;
     case ORIENTATION_DOWN:
         a = -FOV_SIZE;
         b = -1U;
         c = (FOV_SIZE * FOV_SIZE) - 1U;
+        col_offset -= (FOV_SIZE / 2U);
         break;
     case ORIENTATION_LEFT:
-        a = 1U;
-        b = -FOV_SIZE;
-        c = FOV_SIZE * (FOV_SIZE - 1U);
+        a = -1U;
+        b = FOV_SIZE;
+        c = FOV_SIZE - 1U;
+        row_offset -= (FOV_SIZE / 2U);
+        col_offset -= FOV_SIZE - 1U;
         break;
     default:
         unreachable();
@@ -235,8 +243,9 @@ fill_agent_fov(const struct World *world, const uint32_t idx, enum Tile *tiles)
             const uint32_t col = col_offset + j;
 
             const uint32_t tile_idx = (a * i) + (b * j) + c;
+            const uint32_t map_idx = (row * n_cols) + col;
             tiles[tile_idx] = (col < n_cols && row < n_rows)
-                ? world->map.tiles[(row * n_cols) + col]
+                ? world->map.tiles[map_idx]
                 : TILE_HIDDEN;
         }
     }
