@@ -303,8 +303,11 @@ static void update_agent_state(const struct World *world,
 
 [[nodiscard]] static uint32_t rng(uint32_t *rng_state)
 {
-    const uint32_t RNG_LCG_MUL = 1664525U;
-    const uint32_t RNG_LCG_INC = 1013904223U;
+    enum : uint32_t
+    {
+        RNG_LCG_MUL = 1664525U,
+        RNG_LCG_INC = 1013904223U
+    };
 
     *rng_state = *rng_state * RNG_LCG_MUL + RNG_LCG_INC;
     return *rng_state;
