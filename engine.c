@@ -236,13 +236,16 @@ static void update_agent_state(const struct World *world,
                                uint32_t *agent_state,
                                const uint32_t idx)
 {
-    const uint32_t size = 5U;
+    enum : uint32_t
+    {
+        size = 5U,
+        map_offset = 3U
+    };
 
     agent_state[0] = AGENT_STATE_VERSION;
     agent_state[1] = size;
     agent_state[2] = size;
 
-    const uint32_t map_offset = 3U;
     enum Tile *tiles = (enum Tile *)(agent_state + map_offset);
 
     const uint32_t n_rows = world->map.n_rows;
@@ -270,7 +273,7 @@ static void update_agent_state(const struct World *world,
     case ORIENTATION_DOWN:
         a = -size;
         b = -1U;
-        c = size * size - 1U;
+        c = (size * size) - 1U;
         break;
     case ORIENTATION_LEFT:
         a = 1U;

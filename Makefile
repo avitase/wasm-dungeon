@@ -63,7 +63,7 @@ check-format:
 lint: engine.c
 	$(CLANG_TIDY) engine.c -- -std=c23 -nostdlib $(WARNINGS) -O0
 
-test: check-format lint build/unit_tests
+test: check-format lint build/engine.wasm build/unit_tests
 	./build/unit_tests
 
 clean:
