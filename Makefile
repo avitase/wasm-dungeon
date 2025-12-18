@@ -37,7 +37,7 @@ build/engine.wasm: engine.c | build
 	$(CC) --target=$(WASM_TARGET) -std=c23 -nostdlib $(WARNINGS) -O3 -c $< -o $@
 
 build/unit_tests: engine.c engine_tests.c | build
-	$(CC) -std=c23 $(WARNINGS) -O0 -g -fsanitize=address -fno-omit-frame-pointer engine_tests.c unity.c -o $@
+	$(CC) -std=c23 $(WARNINGS) -O0 -g -fsanitize=address,undefined -fno-omit-frame-pointer engine_tests.c unity.c -o $@
 
 build/unit_tests_cov: engine.c engine_tests.c | build
 	$(CC) -std=c23 $(WARNINGS) -O0 -g -fprofile-instr-generate -fcoverage-mapping engine_tests.c unity.c -o $@

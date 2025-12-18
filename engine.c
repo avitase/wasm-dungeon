@@ -1,6 +1,16 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifndef unreachable
+#ifdef __GNUC__
+#define unreachable() (__builtin_unreachable())
+#elifdef _MSC_VER
+#define unreachable() (__assume(false))
+#else
+#define unreachable() ((void)0)
+#endif
+#endif
+
 #define AGENT_STATE_VERSION 0x00010001U
 #define RNG_SEED 0x12345678U
 
@@ -134,6 +144,7 @@ try_move(const struct World *world, const enum Action action, uint32_t *pos)
         }
         break;
     default:
+        unreachable();
         return;
     }
 
@@ -164,7 +175,8 @@ static void turn(const enum Action action, enum Orientation *orientation)
         *orientation += 3U;
         break;
     default:
-        // do nothing
+        unreachable();
+        return;
     }
 
     *orientation %= 4U;
@@ -282,6 +294,9 @@ static void update_agent_state(const struct World *world,
         b = -size;
         c = size * (size - 1U);
         break;
+    default:
+        unreachable();
+        return;
     }
 
     for (uint32_t i = 0; i < size; i++)
