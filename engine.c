@@ -145,7 +145,6 @@ try_move(const struct World *world, const enum Action action, uint32_t *pos)
         break;
     default:
         unreachable();
-        return;
     }
 
     enum Tile *tile = world->map.tiles + *pos;
@@ -280,7 +279,6 @@ static void update_agent_state(const struct World *world,
         break;
     default:
         unreachable();
-        return;
     }
 
     for (uint32_t i = 0; i < size; i++)
