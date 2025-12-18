@@ -51,7 +51,7 @@ struct Map
 {
     uint32_t n_rows;
     uint32_t n_cols;
-    uint8_t *tiles;
+    enum Tile *tiles;
 };
 
 struct World
@@ -83,9 +83,10 @@ static struct World load_world(uint32_t *world_state, const uint32_t seed)
 {
     const uint32_t n_agents = world_state[0];
 
-    const struct Agents agents = {.n_agents = n_agents,
-                                  .positions = world_state + 1U,
-                                  .orientations = world_state + 1U + n_agents};
+    const struct Agents agents = {
+        .n_agents = n_agents,
+        .positions = world_state + 1U,
+        .orientations = (enum Orientation *)(world_state + 1U + n_agents)};
 
     const struct Map map = {
         .n_rows = world_state[1U + (2U * n_agents)],
@@ -149,7 +150,7 @@ try_move(struct World *world, const enum Action action, uint32_t *pos)
     *old_tile = unblock_tile(*old_tile);
 }
 
-static void turn(const enum Action action, uint32_t *orientation)
+static void turn(const enum Action action, enum Orientation *orientation)
 {
     switch (action)
     {
