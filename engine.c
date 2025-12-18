@@ -21,14 +21,14 @@ extern "C"
 
 enum Action : uint32_t
 {
-    ACTION_NONE,
-    ACTION_MOVE_UP,
-    ACTION_MOVE_RIGHT,
-    ACTION_MOVE_DOWN,
-    ACTION_MOVE_LEFT,
-    ACTION_TURN_90,
-    ACTION_TURN_180,
-    ACTION_TURN_270
+    ACTION_NONE = 0,
+    ACTION_TURN_90 = 1,
+    ACTION_TURN_180 = 2,
+    ACTION_TURN_270 = 3,
+    ACTION_MOVE_UP = 4,
+    ACTION_MOVE_RIGHT = 5,
+    ACTION_MOVE_DOWN = 6,
+    ACTION_MOVE_LEFT = 7,
 };
 
 enum Tile : uint8_t
@@ -163,23 +163,7 @@ try_move(const struct World *world, const enum Action action, uint32_t *pos)
 
 static void turn(const enum Action action, enum Orientation *orientation)
 {
-    switch (action)
-    {
-    case ACTION_TURN_90:
-        *orientation += 1U;
-        break;
-    case ACTION_TURN_180:
-        *orientation += 2U;
-        break;
-    case ACTION_TURN_270:
-        *orientation += 3U;
-        break;
-    default:
-        unreachable();
-        return;
-    }
-
-    *orientation %= 4U;
+    *orientation = ((uint32_t)*orientation + (uint32_t)action) % 4U;
 }
 
 static void try_realize_action(const struct World *world,

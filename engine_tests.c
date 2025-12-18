@@ -269,6 +269,59 @@ void test_try_move_into_open_door_marks_it_occupied(void)
     ASSERT_TILE(0, TILE_FLOOR_OCCUPIED);
 }
 
+void test_turn_agent_by_90_degrees_clockwise(void)
+{
+    enum Orientation orientation = ORIENTATION_UP;
+
+    turn(ACTION_TURN_90, &orientation);
+    TEST_ASSERT_EQUAL_UINT32(ORIENTATION_RIGHT, orientation);
+
+    turn(ACTION_TURN_90, &orientation);
+    TEST_ASSERT_EQUAL_UINT32(ORIENTATION_DOWN, orientation);
+
+    turn(ACTION_TURN_90, &orientation);
+    TEST_ASSERT_EQUAL_UINT32(ORIENTATION_LEFT, orientation);
+
+    turn(ACTION_TURN_90, &orientation);
+    TEST_ASSERT_EQUAL_UINT32(ORIENTATION_UP, orientation);
+}
+
+void test_turn_agent_by_180_degrees_clockwise(void)
+{
+    enum Orientation orientation = ORIENTATION_UP;
+
+    turn(ACTION_TURN_180, &orientation);
+    TEST_ASSERT_EQUAL_UINT32(ORIENTATION_DOWN, orientation);
+
+    turn(ACTION_TURN_180, &orientation);
+    TEST_ASSERT_EQUAL_UINT32(ORIENTATION_UP, orientation);
+
+    orientation = ORIENTATION_LEFT;
+
+    turn(ACTION_TURN_180, &orientation);
+    TEST_ASSERT_EQUAL_UINT32(ORIENTATION_RIGHT, orientation);
+
+    turn(ACTION_TURN_180, &orientation);
+    TEST_ASSERT_EQUAL_UINT32(ORIENTATION_LEFT, orientation);
+}
+
+void test_turn_agent_by_270_degrees_clockwise(void)
+{
+    enum Orientation orientation = ORIENTATION_UP;
+
+    turn(ACTION_TURN_270, &orientation);
+    TEST_ASSERT_EQUAL_UINT32(ORIENTATION_LEFT, orientation);
+
+    turn(ACTION_TURN_270, &orientation);
+    TEST_ASSERT_EQUAL_UINT32(ORIENTATION_DOWN, orientation);
+
+    turn(ACTION_TURN_270, &orientation);
+    TEST_ASSERT_EQUAL_UINT32(ORIENTATION_RIGHT, orientation);
+
+    turn(ACTION_TURN_270, &orientation);
+    TEST_ASSERT_EQUAL_UINT32(ORIENTATION_UP, orientation);
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -285,6 +338,10 @@ int main(void)
     RUN_TEST(test_try_move_does_not_move_into_occupied_tile);
     RUN_TEST(test_try_move_leaving_open_door_keeps_door_open);
     RUN_TEST(test_try_move_into_open_door_marks_it_occupied);
+
+    RUN_TEST(test_turn_agent_by_90_degrees_clockwise);
+    RUN_TEST(test_turn_agent_by_180_degrees_clockwise);
+    RUN_TEST(test_turn_agent_by_270_degrees_clockwise);
 
     return UNITY_END();
 }
