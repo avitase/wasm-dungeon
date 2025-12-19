@@ -322,7 +322,7 @@ void test_turn_agent_by_270_degrees_clockwise(void)
     TEST_ASSERT_EQUAL_UINT32(ORIENTATION_UP, orientation);
 }
 
-void test_fill_agent_fov(void)
+void test_fill_agent_fov_for_all_orientations(void)
 {
     const enum Tile o = TILE_FLOOR;
     const enum Tile x = TILE_FLOOR_OCCUPIED;
@@ -442,6 +442,7 @@ int main(void)
     RUN_TEST(test_turn_agent_by_270_degrees_clockwise);
 
     RUN_TEST(test_fill_agent_fov);
+    RUN_TEST(test_fill_agent_fov_for_all_orientations);
 
     return UNITY_END();
 }
