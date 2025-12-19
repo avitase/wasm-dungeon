@@ -14,6 +14,7 @@
 #define AGENT_STATE_VERSION 0x00010001U
 #define RNG_SEED 0x12345678U
 #define FOV_SIZE 5U
+#define FOV_SELF_IDX 22U
 
 #ifdef __cplusplus
 extern "C"
@@ -329,6 +330,9 @@ static void apply_occlusion(enum Tile *tiles)
      *  - agent cannot see tile 13 if 17 *and* 18 are blocked.
      */
 
+    // NOLINTNEXTLINE(misc-redundant-expression, readability-magic-numbers)
+    static_assert(FOV_SELF_IDX == 22U);
+
     // NOLINTBEGIN(readability-magic-numbers)
     m[0] = m[11] || m[17] || (m[6] && (m[5] || m[16]));
     m[1] = m[12] || m[17];
@@ -366,10 +370,11 @@ static void update_agent_state(const struct World *world,
                                const uint32_t idx)
 {
     agent_state[0] = AGENT_STATE_VERSION;
-    agent_state[1] = FOV_SIZE;
-    agent_state[2] = FOV_SIZE;
+    agent_state[1] = FOV_SIZE; // rows
+    agent_state[2] = FOV_SIZE; // columns
+    agent_state[3] = FOV_SELF_IDX;
 
-    enum Tile *tiles = (enum Tile *)(agent_state + 3U);
+    enum Tile *tiles = (enum Tile *)(agent_state + 4U);
     fill_agent_fov(world, idx, tiles);
     apply_occlusion(tiles);
 }
