@@ -30,6 +30,8 @@ enum Action : uint32_t
     ACTION_MOVE_RIGHT = 5,
     ACTION_MOVE_DOWN = 6,
     ACTION_MOVE_LEFT = 7,
+    ACTION_OPEN_DOOR = 8,
+    ACTION_CLOSE_DOOR = 9,
 };
 
 enum Tile : uint8_t
@@ -45,10 +47,10 @@ enum Tile : uint8_t
 
 enum Orientation : uint32_t
 {
-    ORIENTATION_UP,
-    ORIENTATION_RIGHT,
-    ORIENTATION_DOWN,
-    ORIENTATION_LEFT,
+    ORIENTATION_UP = ACTION_MOVE_UP,
+    ORIENTATION_RIGHT = ACTION_MOVE_RIGHT,
+    ORIENTATION_DOWN = ACTION_MOVE_DOWN,
+    ORIENTATION_LEFT = ACTION_MOVE_LEFT,
 };
 
 struct Agents
@@ -110,60 +112,95 @@ static struct World load_world(uint32_t *world_state, const uint32_t seed)
     return world;
 }
 
-static void
-try_move(const struct World *world, const enum Action action, uint32_t *pos)
+[[nodiscard]] static uint32_t
+ahead(const struct Map map,
+      const uint32_t pos, // NOLINT(bugprone-easily-swappable-parameters)
+      const enum Orientation
+          orientation // NOLINT(bugprone-easily-swappable-parameters)
+)
 {
-    const uint32_t old_pos = *pos;
+    const uint32_t n_rows = map.n_rows;
+    const uint32_t n_cols = map.n_cols;
 
-    const uint32_t n_rows = world->map.n_rows;
-    const uint32_t n_cols = world->map.n_cols;
-
-    switch (action)
+    switch (orientation)
     {
-    case ACTION_MOVE_UP:
-        if (*pos >= n_cols)
+    case ORIENTATION_UP:
+        if (pos >= n_cols)
         {
-            *pos -= n_cols;
+            return pos - n_cols;
         }
         break;
-    case ACTION_MOVE_RIGHT:
-        if ((*pos % n_cols) + 1U < n_cols)
+    case ORIENTATION_RIGHT:
+        if ((pos % n_cols) + 1U < n_cols)
         {
-            *pos += 1U;
+            return pos + 1U;
         }
         break;
-    case ACTION_MOVE_DOWN:
-        if (*pos + n_cols < n_rows * n_cols)
+    case ORIENTATION_DOWN:
+        if (pos + n_cols < n_rows * n_cols)
         {
-            *pos += n_cols;
+            return pos + n_cols;
         }
         break;
-    case ACTION_MOVE_LEFT:
-        if ((*pos % n_cols) > 0)
+    case ORIENTATION_LEFT:
+        if ((pos % n_cols) > 0)
         {
-            *pos -= 1U;
+            return pos - 1U;
         }
         break;
     default:
         unreachable();
     }
 
+    return pos;
+}
+
+static void
+try_move(const struct World *world, const enum Action action, uint32_t *pos)
+{
+    const uint32_t old_pos = *pos;
+    *pos = ahead(world->map, *pos, (enum Orientation)action);
+
     enum Tile *tile = world->map.tiles + *pos;
     if (is_tile_blocked(*tile))
     {
         *pos = old_pos;
-        return;
     }
+    else
+    {
+        *tile = block_tile(*tile);
 
-    *tile = block_tile(*tile);
-
-    enum Tile *old_tile = world->map.tiles + old_pos;
-    *old_tile = unblock_tile(*old_tile);
+        enum Tile *old_tile = world->map.tiles + old_pos;
+        *old_tile = unblock_tile(*old_tile);
+    }
 }
 
 static void turn(const enum Action action, enum Orientation *orientation)
 {
-    *orientation = ((uint32_t)*orientation + (uint32_t)action) % 4U;
+    *orientation = ORIENTATION_UP
+        + ((*orientation - ORIENTATION_UP + (uint32_t)action) % 4U);
+}
+
+static void try_open_door(const struct Map map,
+                          const uint32_t pos,
+                          const enum Orientation orientation)
+{
+    enum Tile *tile = map.tiles + ahead(map, pos, orientation);
+    if (*tile == TILE_CLOSED_DOOR)
+    {
+        *tile = TILE_OPEN_DOOR;
+    }
+}
+
+static void try_close_door(const struct Map map,
+                           const uint32_t pos,
+                           const enum Orientation orientation)
+{
+    enum Tile *tile = map.tiles + ahead(map, pos, orientation);
+    if (*tile == TILE_OPEN_DOOR)
+    {
+        *tile = TILE_CLOSED_DOOR;
+    }
 }
 
 static void try_realize_action(const struct World *world,
@@ -184,6 +221,16 @@ static void try_realize_action(const struct World *world,
     case ACTION_TURN_180:
     case ACTION_TURN_270:
         turn(action, world->agents.orientations + idx);
+        break;
+    case ACTION_OPEN_DOOR:
+        try_open_door(world->map,
+                      world->agents.positions[idx],
+                      world->agents.orientations[idx]);
+        break;
+    case ACTION_CLOSE_DOOR:
+        try_close_door(world->map,
+                       world->agents.positions[idx],
+                       world->agents.orientations[idx]);
         break;
     }
 }

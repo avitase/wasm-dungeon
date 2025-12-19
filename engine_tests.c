@@ -269,6 +269,76 @@ void test_try_move_into_open_door_marks_it_occupied(void)
     ASSERT_TILE(0, TILE_FLOOR_OCCUPIED);
 }
 
+void test_try_open_door_opens_closed_door(void)
+{
+    move_agent1(1);
+    g_agents.orientations[1] = ORIENTATION_RIGHT;
+    g_map.tiles[2] = TILE_CLOSED_DOOR;
+
+    try_open_door(g_map, 1, ORIENTATION_RIGHT);
+    ASSERT_TILE(2, TILE_OPEN_DOOR);
+}
+
+void test_try_open_door_keeps_open_door_open(void)
+{
+    move_agent1(1);
+    g_agents.orientations[1] = ORIENTATION_RIGHT;
+    g_map.tiles[2] = TILE_OPEN_DOOR;
+
+    try_open_door(g_map, 1, ORIENTATION_RIGHT);
+    ASSERT_TILE(2, TILE_OPEN_DOOR);
+}
+
+void test_try_open_door_does_not_open_door_if_not_ahead(void)
+{
+    move_agent1(1);
+    g_agents.orientations[1] = ORIENTATION_UP;
+    g_map.tiles[2] = TILE_CLOSED_DOOR;
+
+    try_open_door(g_map, 1, ORIENTATION_RIGHT);
+    ASSERT_TILE(2, TILE_OPEN_DOOR);
+}
+
+void test_try_close_door_closes_open_door(void)
+{
+    move_agent1(1);
+    g_agents.orientations[1] = ORIENTATION_RIGHT;
+    g_map.tiles[2] = TILE_OPEN_DOOR;
+
+    try_close_door(g_map, 1, ORIENTATION_RIGHT);
+    ASSERT_TILE(2, TILE_CLOSED_DOOR);
+}
+
+void test_try_close_door_keeps_closed_door_closed(void)
+{
+    move_agent1(1);
+    g_agents.orientations[1] = ORIENTATION_RIGHT;
+    g_map.tiles[2] = TILE_CLOSED_DOOR;
+
+    try_close_door(g_map, 1, ORIENTATION_RIGHT);
+    ASSERT_TILE(2, TILE_CLOSED_DOOR);
+}
+
+void test_try_close_door_does_not_close_door_if_not_ahead(void)
+{
+    move_agent1(1);
+    g_agents.orientations[1] = ORIENTATION_UP;
+    g_map.tiles[2] = TILE_OPEN_DOOR;
+
+    try_close_door(g_map, 1, ORIENTATION_RIGHT);
+    ASSERT_TILE(2, TILE_CLOSED_DOOR);
+}
+
+void test_try_close_door_does_not_close_door_if_occupied(void)
+{
+    move_agent1(1);
+    g_agents.orientations[1] = ORIENTATION_RIGHT;
+    g_map.tiles[2] = TILE_OPEN_DOOR_OCCUPIED;
+
+    try_close_door(g_map, 1, ORIENTATION_RIGHT);
+    ASSERT_TILE(2, TILE_OPEN_DOOR_OCCUPIED);
+}
+
 void test_turn_agent_by_90_degrees_clockwise(void)
 {
     enum Orientation orientation = ORIENTATION_UP;
@@ -468,6 +538,14 @@ int main(void)
     RUN_TEST(test_try_move_does_not_move_into_occupied_tile);
     RUN_TEST(test_try_move_leaving_open_door_keeps_door_open);
     RUN_TEST(test_try_move_into_open_door_marks_it_occupied);
+
+    RUN_TEST(test_try_open_door_opens_closed_door);
+    RUN_TEST(test_try_open_door_keeps_open_door_open);
+    RUN_TEST(test_try_open_door_does_not_open_door_if_not_ahead);
+    RUN_TEST(test_try_close_door_closes_open_door);
+    RUN_TEST(test_try_close_door_keeps_closed_door_closed);
+    RUN_TEST(test_try_close_door_does_not_close_door_if_not_ahead);
+    RUN_TEST(test_try_close_door_does_not_close_door_if_occupied);
 
     RUN_TEST(test_turn_agent_by_90_degrees_clockwise);
     RUN_TEST(test_turn_agent_by_180_degrees_clockwise);
