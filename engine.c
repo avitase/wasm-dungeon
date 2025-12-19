@@ -268,6 +268,20 @@ static void apply_occlusion(enum Tile *tiles)
         m[i] = is_tile_blocked(tiles[i]);
     }
 
+    /* Indexing of FoV:
+     *
+     *  0  1  2  3  4
+     *  5  6  7  8  9
+     * 10 11 12 13 14
+     * 15 16 17 18 19
+     * 20 21 xx 23 24
+     *       ^^--- agent facing up
+     *
+     * Examples:
+     *  - agent cannot see tile 1 if 12 *or* 17 are blocked.
+     *  - agent cannot see tile 13 if 17 *and* 18 are blocked.
+     */
+
     // NOLINTBEGIN(readability-magic-numbers)
     m[0] = m[11] || m[17] || (m[6] && (m[5] || m[16]));
     m[1] = m[12] || m[17];
@@ -280,15 +294,16 @@ static void apply_occlusion(enum Tile *tiles)
     m[8] = m[17] || (m[12] && (m[13] || m[18]));
     m[9] = m[13] || m[17] || m[18];
     m[10] = m[16] || ((m[11] || m[17]) && (m[15] || m[21]));
-    m[11] = m[16] || m[17];
+    m[11] = m[16] && m[17];
     m[12] = m[17];
     m[14] = m[18] || ((m[13] || m[17]) && (m[19] || m[23]));
-    m[13] = m[17] || m[18];
+    m[13] = m[17] && m[18];
     m[15] = m[21];
     m[16] = m[17] && m[21];
     m[18] = m[17] && m[23];
     m[19] = m[23];
     m[20] = m[21];
+    m[22] = 0U;
     m[24] = m[23];
     // NOLINTEND(readability-magic-numbers)
 

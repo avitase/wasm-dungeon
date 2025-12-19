@@ -420,6 +420,38 @@ void test_fill_agent_fov_for_all_orientations(void)
     }
 }
 
+void test_apply_occlusion_hides_occluded_tiles()
+{
+    const enum Tile o = TILE_FLOOR;
+    const enum Tile x = TILE_FLOOR_OCCUPIED;
+    const enum Tile w = TILE_WALL;
+    const enum Tile d = TILE_CLOSED_DOOR;
+    const enum Tile h = TILE_HIDDEN;
+
+    // clang-format off
+    enum Tile fov[] = {
+        o, o, o, o, o,
+        d, w, o, o, o,
+        o, o, o, o, o,
+        o, o, o, w, o,
+        w, o, x, o, o,
+    };
+    // clang-format on
+
+    // clang-format off
+    const enum Tile expected[] = {
+        h, o, o, o, o,
+        d, w, o, o, h,
+        o, o, o, o, h,
+        o, o, o, w, o,
+        w, o, x, o, o,
+    };
+    // clang-format on
+
+    apply_occlusion(fov);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, fov, 25);
+}
+
 int main(void)
 {
     UNITY_BEGIN();
@@ -441,8 +473,9 @@ int main(void)
     RUN_TEST(test_turn_agent_by_180_degrees_clockwise);
     RUN_TEST(test_turn_agent_by_270_degrees_clockwise);
 
-    RUN_TEST(test_fill_agent_fov);
     RUN_TEST(test_fill_agent_fov_for_all_orientations);
+
+    RUN_TEST(test_apply_occlusion_hides_occluded_tiles);
 
     return UNITY_END();
 }
