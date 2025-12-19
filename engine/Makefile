@@ -33,8 +33,16 @@ coverage: build/coverage.lcov build/coverage.txt
 build:
 	mkdir -p build
 
-build/engine.wasm: engine.c | build
+build/engine.o: engine.c | build
 	$(CC) --target=$(WASM_TARGET) -std=c23 -nostdlib $(WARNINGS) -O3 -c $< -o $@
+
+build/engine.wasm: build/engine.o
+	$(CC) --target=$(WASM_TARGET) -nostdlib \
+		-Wl,--no-entry \
+		-Wl,--export=tick \
+		-Wl,--export-memory \
+		-Wl,--export=__heap_base \
+		$< -o $@
 
 build/unit_tests: engine.c engine_tests.c | build
 	$(CC) -std=c23 $(WARNINGS) -O0 -g -fsanitize=address,undefined -fno-omit-frame-pointer engine_tests.c unity.c -o $@
@@ -66,7 +74,7 @@ build/lint.stamp: engine.c | build
 
 lint: build/lint.stamp
 
-test: check-format lint build/engine.wasm build/unit_tests
+test: check-format lint build/engine.o build/unit_tests
 	./build/unit_tests
 
 clean:
