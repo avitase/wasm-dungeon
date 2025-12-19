@@ -356,7 +356,7 @@ void test_fill_agent_fov(void)
         fill_agent_fov(&g_world, 1U, tiles);
 
         // clang-format off
-        enum Tile expected[] = {
+        const enum Tile expected[] = {
             h, h, h, h, h,
             h, h, h, h, h,
             h, h, h, h, h,
@@ -373,7 +373,7 @@ void test_fill_agent_fov(void)
         fill_agent_fov(&g_world, 1U, tiles);
 
         // clang-format off
-        enum Tile expected[] = {
+        const enum Tile expected[] = {
             h, w, w, w, w,
             h, o, o, o, w,
             h, o, o, o, w,
@@ -390,7 +390,7 @@ void test_fill_agent_fov(void)
         fill_agent_fov(&g_world, 1U, tiles);
 
         // clang-format off
-        enum Tile expected[] = {
+        const enum Tile expected[] = {
             o, w, o, o, h,
             o, w, o, o, h,
             w, w, d, w, h,
@@ -407,7 +407,7 @@ void test_fill_agent_fov(void)
         fill_agent_fov(&g_world, 1U, tiles);
 
         // clang-format off
-        enum Tile expected[] = {
+        const enum Tile expected[] = {
             h, h, h, h, h,
             h, h, h, h, h,
             h, h, h, h, h,
