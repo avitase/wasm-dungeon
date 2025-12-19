@@ -391,11 +391,10 @@ static void update_agent_state(const struct World *world,
     return *rng_state;
 }
 
-void tick(
-    uint32_t *world_state,  // NOLINT(bugprone-easily-swappable-parameters)
-    uint32_t *agent_states, // NOLINT(bugprone-easily-swappable-parameters)
-    const uint32_t *agent_actions,
-    const uint32_t seed)
+void tick(uint32_t *world_state,
+          uint32_t **agent_states,
+          const uint32_t *agent_actions,
+          const uint32_t seed)
 {
     struct World world = load_world(world_state, seed);
 
@@ -417,7 +416,7 @@ void tick(
 
     for (uint32_t i = 0; i < n_agents; i++)
     {
-        update_agent_state(&world, agent_states + i, i);
+        update_agent_state(&world, agent_states[i], i);
     }
 }
 
