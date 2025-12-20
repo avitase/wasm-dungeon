@@ -39,6 +39,7 @@ build/engine.o: engine.c | build
 build/engine.wasm: build/engine.o
 	$(CC) --target=$(WASM_TARGET) -nostdlib \
 		-Wl,--no-entry \
+		-Wl,--export=agent_state_size \
 		-Wl,--export=tick \
 		-Wl,--export-memory \
 		-Wl,--export=__heap_base \

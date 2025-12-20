@@ -12,6 +12,7 @@
 #endif
 
 #define AGENT_STATE_VERSION 0x00010001U
+#define AGENT_STATE_SIZE 11U
 #define RNG_SEED 0x12345678U
 #define FOV_SIZE 5U
 #define FOV_SELF_IDX 22U
@@ -48,10 +49,10 @@ enum Tile : uint8_t
 
 enum Orientation : uint32_t
 {
-    ORIENTATION_UP = ACTION_MOVE_UP,
-    ORIENTATION_RIGHT = ACTION_MOVE_RIGHT,
-    ORIENTATION_DOWN = ACTION_MOVE_DOWN,
-    ORIENTATION_LEFT = ACTION_MOVE_LEFT,
+    ORIENTATION_UP,
+    ORIENTATION_RIGHT,
+    ORIENTATION_DOWN,
+    ORIENTATION_LEFT,
 };
 
 struct Agents
@@ -73,6 +74,12 @@ struct World
     uint32_t rng_state;
     struct Agents agents;
     struct Map map;
+};
+
+struct Pose
+{
+    uint32_t position;
+    enum Orientation heading;
 };
 
 [[nodiscard]] static uint32_t is_tile_blocked(const enum Tile tile)
@@ -113,54 +120,54 @@ static struct World load_world(uint32_t *world_state, const uint32_t seed)
     return world;
 }
 
-[[nodiscard]] static uint32_t
-ahead(const struct Map map,
-      const uint32_t pos, // NOLINT(bugprone-easily-swappable-parameters)
-      const enum Orientation
-          orientation // NOLINT(bugprone-easily-swappable-parameters)
-)
+[[nodiscard]] static uint32_t ahead(const struct Map map,
+                                    const struct Pose pose)
 {
     const uint32_t n_rows = map.n_rows;
     const uint32_t n_cols = map.n_cols;
 
-    switch (orientation)
+    switch (pose.heading)
     {
     case ORIENTATION_UP:
-        if (pos >= n_cols)
+        if (pose.position >= n_cols)
         {
-            return pos - n_cols;
+            return pose.position - n_cols;
         }
         break;
     case ORIENTATION_RIGHT:
-        if ((pos % n_cols) + 1U < n_cols)
+        if ((pose.position % n_cols) + 1U < n_cols)
         {
-            return pos + 1U;
+            return pose.position + 1U;
         }
         break;
     case ORIENTATION_DOWN:
-        if (pos + n_cols < n_rows * n_cols)
+        if (pose.position + n_cols < n_rows * n_cols)
         {
-            return pos + n_cols;
+            return pose.position + n_cols;
         }
         break;
     case ORIENTATION_LEFT:
-        if ((pos % n_cols) > 0)
+        if ((pose.position % n_cols) > 0)
         {
-            return pos - 1U;
+            return pose.position - 1U;
         }
         break;
     default:
         unreachable();
     }
 
-    return pos;
+    return pose.position;
 }
 
 static void
 try_move(const struct World *world, const enum Action action, uint32_t *pos)
 {
+    const struct Pose pose = {.position = *pos,
+                              .heading =
+                                  (enum Orientation)(action - ACTION_MOVE_UP)};
+
     const uint32_t old_pos = *pos;
-    *pos = ahead(world->map, *pos, (enum Orientation)action);
+    *pos = ahead(world->map, pose);
 
     enum Tile *tile = world->map.tiles + *pos;
     if (is_tile_blocked(*tile))
@@ -186,7 +193,9 @@ static void try_open_door(const struct Map map,
                           const uint32_t pos,
                           const enum Orientation orientation)
 {
-    enum Tile *tile = map.tiles + ahead(map, pos, orientation);
+    const struct Pose pose = {.position = pos, .heading = orientation};
+
+    enum Tile *tile = map.tiles + ahead(map, pose);
     if (*tile == TILE_CLOSED_DOOR)
     {
         *tile = TILE_OPEN_DOOR;
@@ -197,7 +206,9 @@ static void try_close_door(const struct Map map,
                            const uint32_t pos,
                            const enum Orientation orientation)
 {
-    enum Tile *tile = map.tiles + ahead(map, pos, orientation);
+    const struct Pose pose = {.position = pos, .heading = orientation};
+
+    enum Tile *tile = map.tiles + ahead(map, pose);
     if (*tile == TILE_OPEN_DOOR)
     {
         *tile = TILE_CLOSED_DOOR;
@@ -391,10 +402,16 @@ static void update_agent_state(const struct World *world,
     return *rng_state;
 }
 
-void tick(uint32_t *world_state,
-          uint32_t **agent_states,
-          const uint32_t *agent_actions,
-          const uint32_t seed)
+[[nodiscard]] uint32_t agent_state_size(void)
+{
+    return AGENT_STATE_SIZE;
+}
+
+void tick(
+    uint32_t *world_state,  // NOLINT(bugprone-easily-swappable-parameters)
+    uint32_t *agent_states, // NOLINT(bugprone-easily-swappable-parameters)
+    const uint32_t *agent_actions,
+    const uint32_t seed)
 {
     struct World world = load_world(world_state, seed);
 
@@ -416,7 +433,8 @@ void tick(uint32_t *world_state,
 
     for (uint32_t i = 0; i < n_agents; i++)
     {
-        update_agent_state(&world, agent_states[i], i);
+        update_agent_state(
+            &world, agent_states + (size_t)(i * AGENT_STATE_SIZE), i);
     }
 }
 
